@@ -44,30 +44,43 @@ app.get('/help', (req, res) => {
 });
 
 app.get('/weather', (req, res) => {
-  if(!req.query.address) {
-    return res.send({
-      error: 'no address rprovided'
-    });
-  }
-  geocode(req.query.address, (error, { latitude, longitude, location } = {}) => {
-    if(error) {
-      return res.send({
-        error
+  if(req.query.address) {
+    geocode(req.query.address, (error, { latitude, longitude, location } = {}) => {
+      if(error) {
+        return res.send({
+          error
+        });
+      }
+      forecast(latitude, longitude, (error, forecastData) => {
+        if(error) {
+          return res.send({
+            error
+          });
+        }
+        res.send({
+          forecast: forecastData,
+          location,
+          address: req.query.address
+        });
       });
-    }
-    forecast(latitude, longitude, (error, forecastData) => {
+    });
+  } else if(req.query.coords) {
+    const position = req.query.coords.split(',');
+    forecast(position[0], position[1], (error, forecastData) => {
       if(error) {
         return res.send({
           error
         });
       }
       res.send({
-        forecast: forecastData,
-        location,
-        address: req.query.address
+        forecast: forecastData
       });
     });
-  });
+  } else {
+    return res.send({
+      error: 'no address rprovided'
+    });
+  }
 });
 
 app.get('/products', (req, res) => {
